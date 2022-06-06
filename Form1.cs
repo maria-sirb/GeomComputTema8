@@ -28,6 +28,7 @@ namespace GeomComputTema8
             Polygon pol = new Polygon(g, sr);
             List<Point> pointsList = new List<Point>(pol.PointsList);
             Stack<Point> eliminated = new Stack<Point>();
+            List<Tuple<Point, Point, Point>> trianglesList = new List<Tuple<Point, Point, Point>>();
             while(pointsList.Count > 3)
             {
                 for(int i = 0; i < pointsList.Count; i++)
@@ -55,19 +56,54 @@ namespace GeomComputTema8
                     if(IsDiagonal(pointsList, p1, p3))
                     {
                         g.DrawLine(p, p1.X, p1.Y, p3.X, p3.Y);
+                        Tuple<Point, Point, Point> triangle;
+                        triangle = Tuple.Create(p1, p2, p3);
+                        trianglesList.Add(triangle);
                         eliminated.Push(p2);
                         pointsList.Remove(p2);
                         break;
                     }
                 }
             }
-
+            
             //tricolorare
-           while(eliminated.Count > 0)
-           {
-                pointsList.Add(eliminated.Peek());
-                eliminated.Pop();
-           }
+            List<Color> pointsColors = new List<Color>();
+            Pen pinkPen = new Pen(Color.Fuchsia, 4);
+            Pen orangePen = new Pen(Color.Orange, 4);
+            Pen redPen = new Pen(Color.Red, 4);
+            g.DrawEllipse(pinkPen, pointsList[0].X, pointsList[0].Y, 3, 3);
+            pointsColors.Add(Color.Fuchsia);
+            g.DrawEllipse(orangePen, pointsList[1].X, pointsList[1].Y, 3, 3);
+            pointsColors.Add(Color.Orange);
+            g.DrawEllipse(redPen, pointsList[2].X, pointsList[2].Y, 3, 3);
+            pointsColors.Add(Color.Red);
+            g.DrawEllipse(Pens.Black, eliminated.Peek().X, eliminated.Peek().Y, 6, 6);
+            while (eliminated.Count > 0)
+            {
+               
+                Dictionary<Color, bool> colors = new Dictionary<Color, bool>();
+                colors.Add(Color.Fuchsia, false);
+                colors.Add(Color.Red, false);
+                colors.Add(Color.Orange, false);
+                Tuple<Point, Point, Point> triangle;
+                triangle = FindTriangle(pointsList, trianglesList, eliminated.Peek());
+                Point p1 = triangle.Item1;
+                Point p2 = triangle.Item2;
+                colors[pointsColors[pointsList.FindIndex(s => s == p1)]] = true;
+                colors[pointsColors[pointsList.FindIndex(s => s == p2)]] = true;
+                foreach (KeyValuePair<Color, bool> kvp in colors)
+                {
+                    if(kvp.Value == false)
+                    {
+                        Pen pen = new Pen(kvp.Key, 4);
+                        g.DrawEllipse(pen, eliminated.Peek().X, eliminated.Peek().Y, 3, 3);
+                        pointsColors.Add(kvp.Key);
+                        break;
+                    }
+                }
+                pointsList.Add(eliminated.Pop());
+                
+            }
 
             //arie
             float area = 0;
@@ -92,6 +128,48 @@ namespace GeomComputTema8
 
 
 
+
+        }
+       private static Tuple<Point, Point, Point> FindTriangle(List<Point> l, List<Tuple<Point, Point, Point>> t, Point a)
+       {
+            Tuple<Point, Point, Point> noTriangle;
+            Point p = new Point(0, 0);
+            noTriangle = Tuple.Create(p, p, p);
+            for(int i = 0; i < l.Count; i++)
+            {
+                for(int j = i + 1; j < l.Count; j++)
+                {
+                    Tuple<Point, Point, Point> triangle;
+                    triangle = Tuple.Create(l[i], l[j], a);
+                    for(int k = 0; k < t.Count; k++)
+                    {
+                        if (IsEqual(triangle, t[k]))
+                            return triangle;
+                    }
+
+                }
+            }
+            return noTriangle;
+            
+       }
+        private static bool IsEqual(Tuple<Point, Point, Point> t1, Tuple<Point, Point, Point> t2)
+        {
+            bool foundItem1 = false;
+            bool foundItem2 = false;
+            bool foundItem3 = false;
+            if (t2.Item1 == t1.Item1 ||
+                t2.Item2 == t1.Item1 ||
+                t2.Item3 == t1.Item1)
+                foundItem1 = true;
+            if (t2.Item1 == t1.Item2 ||
+               t2.Item2 == t1.Item2 ||
+               t2.Item3 == t1.Item2)
+                foundItem2 = true;
+            if (t2.Item1 == t1.Item3 ||
+               t2.Item2 == t1.Item3 ||
+               t2.Item3 == t1.Item3)
+                foundItem3 = true;
+            return foundItem1 && foundItem2 && foundItem3;
 
         }
         /// <summary>

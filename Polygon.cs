@@ -15,7 +15,7 @@ namespace GeomComputTema8
         {
             PointsList = new List<Point>();
             // Graphics g = e.Graphics;
-            Pen redPen = new Pen(Color.Red, 3);
+            Pen redPen = new Pen(Color.DarkRed, 3);
             Pen bluePen = new Pen(Color.Blue, 1);
 
             using (sr)
